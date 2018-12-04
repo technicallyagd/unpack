@@ -61,7 +61,12 @@ proc unpackSequenceInternal(srcNode, dests: NimNode; sec,
   var i = 1
   for dest in dests.children:
     var newNode = stNode.copyNimTree
-    newNode[0] = dest
+    var realDest = dest
+    case dest.kind:
+    of nnkVarTy:
+      realDest = dest[0]
+    else: discard
+    newNode[0] = realDest
     newNode[^1] = nnkBracketExpr.newTree(src, newLit(i-1))
     section.add(newNode)
     inc i
@@ -78,48 +83,66 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
   var src = srcNode
   # Creates a temporary symbol to store proc result.
   if src.kind != nnkSym:
+    ## echo src.treeRepr
     src = genSym(nskLet, "src")
     result.add(newLetStmt(src, srcNode))
   for dest in dests.children:
     case dest.kind:
-    of nnkExprEqExpr:
+    of nnkExprColonExpr:
       var newNode = stNode.copyNimTree
-      newNode[0] = dest[0]
-      newNode[^1] = nnkDotExpr.newTree(src, dest[1])
+      var realDest = dest[0]
+      case realDest.kind:
+      of nnkVarTy:
+        realDest = realDest[0]
+      else: discard
+      newNode[0] = dest[1]
+      newNode[^1] = nnkDotExpr.newTree(src, realDest)
       section.add(newNode)
     else:
       var newNode = stNode.copyNimTree
-      newNode[0] = dest
-      newNode[^1] = nnkDotExpr.newTree(src, dest)
+      var realDest = dest
+      case dest.kind:
+      of nnkVarTy:
+        realDest = dest[0]
+      else: discard
+      newNode[0] = realDest
+      newNode[^1] = nnkDotExpr.newTree(src, realDest)
       section.add(newNode)
 
   result.add(section)
 
-macro `<-`*(dest:untyped;src:typed):typed = 
+macro `<-`*(dests:untyped;src:typed):typed = 
   ## Creates new symbol to unpack src into
   ## [a, b, c] <- src
   ## put var before first item to create mutable variable
   ## [var a, b, c] <- src
-  let hasVar = not findChild(dest[0],it.kind == nnkVarTy).isNil
+  var hasVar = false
+  var firstDest = dests[0]
+  while firstDest.len > 0:
+    if firstDest.kind == nnkVarTy: 
+      hasVar = true
+      break
+    firstDest = firstDest[0]
   let sec = if hasVar:nnkVarSection else: nnkLetSection
   let statement = nnkIdentDefs
-  case dest.kind:
+  case dests.kind:
   of nnkBracket:
-    result = unpackSequenceInternal(src,dest,sec,statement)
+    result = unpackSequenceInternal(src,dests,sec,statement)
   of nnkCurly,nnkTableConstr:
-    result = unpackObjectInternal(src,dest,sec,statement)
+    result = unpackObjectInternal(src,dests,sec,statement)
   else: 
-    error("Oh Noo! Unknown kind: " & $dest.kind)
+    error("Oh Noo! Unknown kind: " & $dests.kind)
 
-macro `<--`*(dest:typed;src:typed):typed = 
+macro `<--`*(dests:untyped;src:typed):typed = 
   ## unpack src into existing symbols
   ## [a, b, c] <-- src
   let sec = nnkStmtList
   let statement = nnkAsgn
-  case dest.kind:
+  case dests.kind:
   of nnkBracket:
-    result = unpackSequenceInternal(src,dest,sec,statement)
+    result = unpackSequenceInternal(src,dests,sec,statement)
   of nnkCurly,nnkTableConstr:
-    result = unpackObjectInternal(src,dest,sec,statement)
+    result = unpackObjectInternal(src,dests,sec,statement)
   else: 
-    error("Oh Noo! Unknown kind: " & $dest.kind)
+    error("Oh Noo! Unknown kind: " & $dests.kind)
+
