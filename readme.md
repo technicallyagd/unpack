@@ -10,6 +10,12 @@ Inspired by @Yardanico's [unpackarray.nim](https://gist.github.com/Yardanico/b6f
 
 let someSeq = @[1, 1, 2, 3, 5]
 someSeq.lunpack(a,b,c) # creates a, b, c with 'let'
+# is expanded into:
+# let
+#   a = someSeq[0]
+#   b = someSeq[1]
+#   c = someSeq[2]
+
 echo a, b, c # 112
 someSeq.vunpack(d,e) # creates d,e with 'var'
 someSeq.unpack(a,c) # assigns someSeq[0] to a, someSeq[1] to c
@@ -37,7 +43,7 @@ tim.someProcWithSideEffects(arg).lunpack(name, job)
 ## TODO
 
 - Docs
-- Support arbitrary entity with `[]` defined to use as index
+- Support arbitrary entity with `[]` defined as indexing operator.
 - Maybe we can also support tables?
 
 ## Suggestions and PR's are welcome
