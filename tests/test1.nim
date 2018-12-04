@@ -92,7 +92,7 @@ suite "Object meber unpacking":
 
     check otherName == timName
 
-    tim.lunpack(job = otherJob, name = yetAnotherName) # and is order-agnostic.
+    tim.lunpack(job, name = yetAnotherName) # and is order-agnostic.
 
     check yetAnotherName == timName
-    check otherJob == fluffer
+    check job == fluffer
