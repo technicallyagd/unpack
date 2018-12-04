@@ -66,7 +66,7 @@ See `tests/test1.nim` for more usages.
 
 ### Unpacking objects with `[]` as indexing operator
 
-`lunpack/vunpack/unpack` won't work. Use `<-` syntax instead.
+Some [packages](https://github.com/mratsim/Arraymancer/blob/master/src/tensor/backend/metadataArray.nim#L17) uses `object` to implement array-like structure. For cases like this, `lunpack/vunpack/unpack` won't work. Use `<-` syntax instead.
 
 ## TODO
 

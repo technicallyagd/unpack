@@ -116,6 +116,11 @@ macro `<-`*(dests:untyped;src:typed):typed =
   ## [a, b, c] <- src
   ## put var before first item to create mutable variable
   ## [var a, b, c] <- src
+  ## unpacking objects
+  ## {var meberA, meberB, memberC} <- src
+  ## unpacking objects to symbols with custom names
+  ## {var meberA : customNameA, meberB, memberC : customNameC} <- src
+
   var hasVar = false
   var firstDest = dests[0]
   while firstDest.len > 0:
@@ -136,6 +141,10 @@ macro `<-`*(dests:untyped;src:typed):typed =
 macro `<--`*(dests:untyped;src:typed):typed = 
   ## unpack src into existing symbols
   ## [a, b, c] <-- src
+  ## for objects
+  ## {meberA, meberB, memberC} <-- src
+  ## rename
+  ## {meberA:customNameA, meberB, memberC} <-- src
   let sec = nnkStmtList
   let statement = nnkAsgn
   case dests.kind:
