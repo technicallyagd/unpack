@@ -2,7 +2,7 @@ import unittest
 
 import unpack
 
-suite "Sequence unpacking":
+suite "Sequence unpacking with (l|v)?unpack macro":
   setup:
     let testSeq = @[2, 4, 6]
     let testArray = [2, 4, 6]
@@ -40,7 +40,45 @@ suite "Sequence unpacking":
     testTuple.unpack(a, b)
     check [a, b] == [2, 4]
 
-suite "Object meber unpacking":
+suite "Sequence unpacking with arrow operators":
+  setup:
+    let testSeq = @[2, 4, 6]
+    let testArray = [2, 4, 6]
+    let testTuple = (2, 4, 6)
+
+  test "should unpack sequence":
+    [a, b, c] <- testSeq
+    check [a, c, b] == [2, 6, 4]
+    # is expanded into:
+    # let
+    #   a = testSeq[0]
+    #   b = testSeq[1]
+    #   c = testSeq[2]
+
+  test "should unpack array":
+    testArray.lunpack(a, b, c)
+    check [a, c, b] == [2, 6, 4]
+  test "should unpack tuple":
+    testTuple.lunpack(a, b, c)
+    check [a, c, b] == [2, 6, 4]
+    ## testTuple.lunpack(d, e, f, g) <- will cause IndexError at runtime
+  test "should unpack from index 0 to arbitrary number":
+    testTuple.lunpack(a, b)
+    check [a, b] == [2, 4]
+  test "vunpack should create variables with var":
+    testTuple.vunpack(a, b)
+    check [a, b] == [2, 4]
+    a = 13
+    check a == 13
+  test "lunpack defines symbols with let":
+    testTuple.lunpack(a, b)
+    check [a, b] == [2, 4]
+  test "unpack should assign data to existing variables":
+    var a, b = 1
+    testTuple.unpack(a, b)
+    check [a, b] == [2, 4]
+
+suite "Object meber unpacking with (l|v)?unpack macro":
   type
     Person = object
       name, job: string
