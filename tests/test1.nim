@@ -88,11 +88,11 @@ suite "Object meber unpacking":
     check secreteCounter == 1
 
   test "should be able to rename object member with '=' sign":
-    tim.lunpack(name = otherName)
+    tim.lunpack(otherName = name)
 
     check otherName == timName
 
-    tim.lunpack(job, name = yetAnotherName) # and is order-agnostic.
+    tim.lunpack(job, yetAnotherName = name) # and is order-agnostic.
 
     check yetAnotherName == timName
     check job == fluffer

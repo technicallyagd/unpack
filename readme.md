@@ -28,7 +28,7 @@ let tim = Person(name: "Tim", job: "Fluffer")
 
 tim.lunpack(name, job) # creates name, job with let and assign respective member values to them
 
-tim.lunpack(job, name = otherName) # you can also unpack into custom names using '='
+tim.lunpack(job, otherName = name) # you can also unpack into custom names using '='
 
 # will not invoke proc chain multiple times
 tim.someProcWithSideEffects(arg).lunpack(name, job)
@@ -39,6 +39,8 @@ tim.someProcWithSideEffects(arg).lunpack(name, job)
 #   name = someUniqueSym1212498.name
 #   job = someUniqueSym1212498.job
 ```
+
+See `tests/test1.nim` for more usages.
 
 ## TODO
 

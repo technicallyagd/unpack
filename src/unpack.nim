@@ -27,8 +27,8 @@ proc unpackInternal(srcNode, dests: NimNode; sec,
       case dest.kind:
       of nnkExprEqExpr:
         var newNode = stNode.copyNimTree
-        newNode[0] = dest[1]
-        newNode[^1] = nnkDotExpr.newTree(src, dest[0])
+        newNode[0] = dest[0]
+        newNode[^1] = nnkDotExpr.newTree(src, dest[1])
         section.add(newNode)
       else:
         var newNode = stNode.copyNimTree
