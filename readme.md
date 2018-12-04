@@ -2,6 +2,8 @@
 
 Array/Sequence/Object destructuring/unpacking macros attempt to quench the thirst of (Python, ES6, et al.)-spoiled people.
 
+Inspired by @Yardanico's [unpackarray.nim](https://gist.github.com/Yardanico/b6fee43f6da8a3bbf0fe048063357115)
+
 ## Example Usage
 
 ```nim
@@ -40,4 +42,4 @@ tim.someProcWithSideEffects(arg).lunpack(name, job)
 
 ## Suggestions and PR's are welcome
 
-Especially if you know how to make this macro more natural to use. I couldn't
+Especially if you know how to make this macro easier to use. Also, if you know any other existing package that does this kind of stuff better, please let me know, thank you.
