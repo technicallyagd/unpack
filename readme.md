@@ -126,7 +126,7 @@ See `tests/test1.nim` for more usages.
 
 #### Using `let` in [] and {} is not allowed
 
-Yes, I also wanted to have the natural `[let x, y] <- someSeq` syntax for defining new symbol with let, `[x, y] <- someSeq` for assignment, but the compiler deems it illegal. I ended up making settle with more verbose assignment syntax since I anticipate it being used less often.
+Yes, I also wanted to have the natural `[let x, y] <- someSeq` syntax for defining new symbol with let, `[x, y] <- someSeq` for assignment, but the compiler deems it illegal. I ended up settle with more verbose assignment syntax since I anticipate it being used less often.
 
 #### About `=` in unpackObject
 
