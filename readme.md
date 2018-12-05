@@ -1,4 +1,4 @@
-# Module Unpack
+# Unpack
 
 Array/Sequence/Object destructuring/unpacking macros attempt to quench the thirst of (Python, ES6, et al.)-spoiled people.
 
