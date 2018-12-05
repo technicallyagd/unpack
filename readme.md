@@ -28,7 +28,7 @@ someSeq.vunpack(d,e) # creates d,e with 'var'
 someSeq.unpack(a,c) # assigns someSeq[0] to a, someSeq[1] to c
 
 # or equivalently:
-[a2, c2] <-- someSeq
+[a2, c2] <-- someSeq # yes, <-- for assignment; <- for definitions. This is not a typo.
 
 type
   Person = object
