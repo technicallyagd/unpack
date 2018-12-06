@@ -186,9 +186,7 @@ macro aUnpackObject*(src: typed; dests: varargs[untyped]): typed =
   ## unpacking objects to symbols with custom names
   ## var customNameA,customNameC:string
   ## src.aUnpackObject(memberA = customNameA, meberB, memberC = customNameC)
-  let sec = nnkStmtList
-  let statement = nnkAsgn
-  result = unpackObjectInternal(src, dests, sec, statement)
+  result = unpackObjectInternal(src, dests, nnkStmtList, nnkAsgn)
 
 macro unpackSeq*(src: typed; dests: varargs[untyped]): typed =
   ## unpacking array/seq/tuple into immutable symbols (i.e. create with `let`)
@@ -210,6 +208,5 @@ macro aUnpackSeq*(src: typed; dests: varargs[untyped]): typed =
   ## assigning values unpacked from seq/array/tuple into existing symbols 
   ## var a, b, c: int
   ## src.aUnpackSeq(a, b, c)
-  let sec = nnkStmtList
-  let statement = nnkAsgn
-  result = unpackSequenceInternal(src, dests, sec, statement)
+  result = unpackSequenceInternal(src, dests, nnkStmtList, nnkAsgn)
+
