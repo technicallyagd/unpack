@@ -2,7 +2,9 @@
 
 Array/Sequence/Object destructuring/unpacking macros attempt to quench the thirst of (Python, ES6, et al.)-spoiled people.
 
-Inspired by @Yardanico's [unpackarray.nim](https://gist.github.com/Yardanico/b6fee43f6da8a3bbf0fe048063357115)
+## This is a rapidly changing package
+
+The syntax and functionality of each macro are still evolving daily/hourly. Please check out [changeLog.md](changeLog.md) to see the recent changes. I will keep deprecated syntax for a few release while triggering compiler warnings to nudge people to new syntax, but they will be removed eventually.
 
 ## Installation
 
@@ -62,12 +64,11 @@ tim.unpackObject(name, job)
 #   name = tim.name
 #   job = tim.job
 
-# you can also unpack into custom names using ':'
-{job: someJob, name: otherName} <- tim
-# Adheres to ES6 syntax
+# you can also unpack into custom names using 'as'
+{job as someJob, name as otherName} <- tim
 
 # or equivalently:
-tim.unpackObject(job = someOtherJob, name = someOtherName)
+tim.unpackObject(job as someOtherJob, name as someOtherName)
 
 # is expanded into:
 # let
@@ -78,15 +79,15 @@ var
   secreteState, arg = 0
 proc someProcWithSideEffects(person: Person, input: int): Person =
   secreteState += 1
-  {var job, name: newName} <- person
+  {var job, name as newName} <- person
   newName &= $input
   result = Person(name: newName, job: job)
 
 # using this at the end of proc chain will not invoke proc chain multiple times
-tim.someProcWithSideEffects(arg).unpackObject(name = tim0, job = job0)
+tim.someProcWithSideEffects(arg).unpackObject(name as tim0, job as job0)
 
 # or equivalently:
-# {name: tim0, job: job0} <- tim.someProcWithSideEffects(arg)
+# {name as tim0, job as job0} <- tim.someProcWithSideEffects(arg)
 
 # is expanded into:
 # let someUniqueSym1212498 = tim.someProcWithSideEffects(arg)
@@ -106,7 +107,7 @@ let (_, diz, _, iz, _, _, _, it) = someTuple
 # it gets lengthy
 
 # with this package
-{y: diz2, i: iz2, m: it2} <- someTuple
+{y as diz2, i as iz2, m as it2} <- someTuple
 # Mind. Blown.
 
 # also, if you only care about the first three items
@@ -197,10 +198,6 @@ Since we have no way to know the sequence length at compile time, (well, at leas
 #### Using `let` in [] and {} is not allowed
 
 Yes, I also wanted to have the natural `[let x, y] <- someSeq` syntax for defining new symbol with let, `[x, y] <- someSeq` for assignment, but the compiler deems it illegal. I ended up settle with more verbose assignment syntax since I anticipate it being used less often.
-
-#### About `=` in unpackObject
-
-It is quite weird to see `name = someName` and then `someName` is the symbol being created/assigned to. It is this way only to match the `name : someName` used in `<-` macro. I would also love be able to use `:` in `unpackObject(name : someName)`, but this is also illegal. If people really hate this, we could use other symbol to replace `=`, suggestions are welcome.
 
 ## TODO
 

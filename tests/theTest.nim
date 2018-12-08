@@ -143,17 +143,17 @@ suite "Object meber unpacking unpackObject/aUnpackObject":
     check secreteCounter == 1
 
   test "should be able to rename object member with '=' sign":
-    tim.unpackObject(name = otherName)
+    tim.unpackObject(name as otherName)
 
     check otherName == timName
 
-    tim.unpackObject(job, name = yetAnotherName) # and is order-agnostic.
+    tim.unpackObject(job, name as yetAnotherName) # and is order-agnostic.
 
     check yetAnotherName == timName
     check job == fluffer
 
   test "adding var before first item should create new variables":
-    tim.unpackObject(var name = otherName, job)
+    tim.unpackObject(var name as otherName, job)
 
     check otherName == timName
     check job == fluffer
@@ -163,11 +163,11 @@ suite "Object meber unpacking unpackObject/aUnpackObject":
 
   test "aUnpackObject should assign to existing variables":
     var otherName, yetAnotherName, job = ""
-    tim.aUnpackObject(name = otherName)
+    tim.aUnpackObject(name as otherName)
 
     check otherName == timName
 
-    tim.aUnpackObject(job, name = yetAnotherName) # and is order-agnostic.
+    tim.aUnpackObject(job, name as yetAnotherName) # and is order-agnostic.
 
     check yetAnotherName == timName
     check job == fluffer
@@ -221,16 +221,16 @@ suite "Object meber unpacking with arrow operators":
     check secreteCounter == 1
 
   test "should be able to rename object member with ':' sign":
-    {name: otherName} <- tim
+    {name as otherName} <- tim
 
     check otherName == timName
 
-    {job, name: yetAnotherName} <- tim # and is order-agnostic.
+    {job, name as yetAnotherName} <- tim # and is order-agnostic.
 
     check yetAnotherName == timName
     check job == fluffer
   test "adding var before first item should create all symbol as mutable variables":
-    {var name: otherName, job} <- tim
+    {var name as otherName, job} <- tim
 
     check otherName == timName
     check job == fluffer
@@ -269,9 +269,9 @@ suite "Named tuple unpacking with arrow operators":
     check (l, n, g) == (2, bojack, equus)
 
   test "should be unpackable with {} like unpacking objects":
-    {var numLegs: l, name: n, genus: g} <- cat
+    {var numLegs as l, name as n, genus as g} <- cat
     check (l, n, g) == (2, carolyn, felis)
-    {name: n, numLegs: l} <-- horse
+    {name as n, numLegs as l} <-- horse
     check (l, n, g) == (2, bojack, felis)
-    {genus: g} <-- horse
+    {genus as g} <-- horse
     check (l, n, g) == (2, bojack, equus)

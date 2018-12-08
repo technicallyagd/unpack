@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.1
+
+- Renames rename syntax. From the originally confusing `{name: anotherName} <- tim` and `unpackObject(name = anotherName)` to clear and descriptive `as` for both. (i.e. `{name as anotherName} <- tim` and `unpackObject(name as anotherName)`.)
+
 ## v0.3.0
 
 - Adds `*` rest operator support for unpacking sequence-like stuff.
@@ -14,6 +18,8 @@
 
 ## v0.1.0
 
-- Initially only has `unpack`, `lunpack`, and `vunpack` macros allows unpacking after chaining but has some limitation. Hated by most (N=2).
+- Inspired by @Yardanico's [unpackarray.nim](https://gist.github.com/Yardanico/b6fee43f6da8a3bbf0fe048063357115)
+
+- Initially only has `unpack`, `lunpack`, and `vunpack` macros. These allows unpacking after chaining but has some limitation. Hated by most (N=2).
 
 - Later added `<--` and `<-` syntax as suggested by @alehander42.

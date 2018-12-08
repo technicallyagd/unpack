@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.0"
+version       = "0.3.1"
 author        = "T.agd"
 description   = "Array/Sequence/Object destructuring/unpacking macro"
 license       = "MIT"

@@ -5,6 +5,7 @@ export oldAPi
 const
   restOp = "*"
   skipOp = "_"
+  renameOp = "as"
 
 proc getRealDest(dest: NimNode; restCount: var int): NimNode =
   result = dest
@@ -95,6 +96,19 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
     result.add(newLetStmt(src, srcNode))
   for dest in dests.children:
     case dest.kind:
+    of nnkInfix:
+      if dest[0].strVal == renameOp:
+        var realDest = dest[1]
+        case realDest.kind:
+        of nnkVarTy:
+          realDest = realDest[0]
+        else: discard
+        var newNode = stNode.copyNimTree
+        newNode[0] = dest[2]
+        newNode[^1] = nnkDotExpr.newTree(src, realDest)
+        section.add(newNode)
+      else:
+        error("Only `" & renameOp & "` is allowed as the infix", dest[0])
     of nnkExprColonExpr, nnkExprEqExpr:
       var realDest = dest[0]
       case realDest.kind:
@@ -104,6 +118,10 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
       var newNode = stNode.copyNimTree
       newNode[0] = dest[1]
       newNode[^1] = nnkDotExpr.newTree(src, realDest)
+      warning("This syntax is being deprecated, please use `{" &
+          realDest.strVal & " as " & dest[
+          1].strVal & "}` instead", dest)
+
       section.add(newNode)
     else:
       var realDest = dest
@@ -126,15 +144,17 @@ macro `<-`*(dests: untyped; src: typed): typed =
   ## unpacking objects
   ## {var meberA, meberB, memberC} <- src
   ## unpacking objects to symbols with custom names
-  ## {var meberA : customNameA, meberB, memberC : customNameC} <- src
+  ## {var meberA as customNameA, meberB, memberC as customNameC} <- src
 
   var hasVar = false
   var firstDest = dests[0]
   while firstDest.len > 0:
-    if firstDest.kind == nnkVarTy:
+    case firstDest.kind
+    of nnkVarTy:
       hasVar = true
       break
-    firstDest = firstDest[0]
+    of nnkInfix: firstDest = firstDest[1]
+    else: firstDest = firstDest[0]
   let sec = if hasVar: nnkVarSection else: nnkLetSection
   let statement = nnkIdentDefs
   case dests.kind:
@@ -151,7 +171,7 @@ macro `<--`*(dests: untyped; src: typed): typed =
   ## for objects
   ## {meberA, meberB, memberC} <-- src
   ## rename
-  ## {meberA:customNameA, meberB, memberC} <-- src
+  ## {meberA as customNameA, meberB, memberC} <-- src
   let sec = nnkStmtList
   let statement = nnkAsgn
   case dests.kind:
@@ -164,19 +184,22 @@ macro `<--`*(dests: untyped; src: typed): typed =
 
 
 macro unpackObject*(src: typed; dests: varargs[untyped]): typed =
-  ## unpacking objects/named tuples into immutable symbols (i.e. create new symbol with `let`)
+  ## unpacking objects/named tuples into immutable symbols 
+  ## (i.e. create new symbol with `let`)
   ## src.unpackObject(meberA, meberB, memberC)
   ## unpacking objects into new variables
   ## src.unpackObject(var meberA, meberB, memberC)
   ## unpacking objects to symbols with custom names
-  ## src.unpackObject(var memberA = customNameA, meberB, memberC = customNameC)
+  ## src.unpackObject(var memberA as customNameA, meberB, memberC as customNameC)
   var hasVar = false
   var firstDest = dests[0]
   while firstDest.len > 0:
-    if firstDest.kind == nnkVarTy:
+    case firstDest.kind
+    of nnkVarTy:
       hasVar = true
       break
-    firstDest = firstDest[0]
+    of nnkInfix: firstDest = firstDest[1]
+    else: firstDest = firstDest[0]
   let sec = if hasVar: nnkVarSection else: nnkLetSection
   let statement = nnkIdentDefs
   result = unpackObjectInternal(src, dests, sec, statement)
@@ -187,7 +210,7 @@ macro aUnpackObject*(src: typed; dests: varargs[untyped]): typed =
   ## src.aUnpackObject(meberA, meberB, memberC)
   ## unpacking objects to symbols with custom names
   ## var customNameA,customNameC:string
-  ## src.aUnpackObject(memberA = customNameA, meberB, memberC = customNameC)
+  ## src.aUnpackObject(memberA as customNameA, meberB, memberC as customNameC)
   result = unpackObjectInternal(src, dests, nnkStmtList, nnkAsgn)
 
 macro unpackSeq*(src: typed; dests: varargs[untyped]): typed =
@@ -211,4 +234,3 @@ macro aUnpackSeq*(src: typed; dests: varargs[untyped]): typed =
   ## var a, b, c: int
   ## src.aUnpackSeq(a, b, c)
   result = unpackSequenceInternal(src, dests, nnkStmtList, nnkAsgn)
-
