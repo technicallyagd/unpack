@@ -119,7 +119,7 @@ let (youNeedTo, writeSoMany, underscoresMan, _, _, _, _, _) = someTuple
 # to be continued...
 ```
 
-See `tests/test1.nim` for more usages.
+See [tests/theTest.nim](tests/theTest.nim) for more usages.
 
 ## Provisional Features
 
