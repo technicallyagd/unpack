@@ -120,6 +120,76 @@ let (youNeedTo, writeSoMany, underscoresMan, _, _, _, _, _) = someTuple
 
 See `tests/test1.nim` for more usages.
 
+## Provisional Features
+
+Following features are implemented but the syntax or their actual effects are still in question.
+
+### Rest operator for unpacking sequences
+
+Like in Python (`*a,b = range(5)`) and modern JavaScript `let [a,...b] = someArray`, you can put the rest of the sequence into a new sequence. I haven't decided on the actual prefix to use yet, but I am settling on `*` as used in Python for now. If you have better ideas, please start an issue to discuss other options.
+
+```nim
+
+let mamaHen = @[3,4,5,6,7]
+
+[a, b, *sneakyFox] <- mamaHen
+
+# is expanded into:
+# let
+#   a = mamaHen[0]
+#   b = mamaHen[1]
+#   sneakyFox = mamaHen[2..^1]
+
+assert(sneakyFox == @[5, 6, 7])
+
+[*sloppySavior, e] <- sneakyFox
+
+assert(sloppySavior == @[5, 6])
+
+# Perhaps the variable naming may be a bit mis-leading,
+# since mamaHen[x..y] creates a new sequence and copy the slice into it,
+# so rather than stealing, the sneakyFox actually cloned(?) whatever mamaHen had with her
+
+# You can use *_ to skip the beginning
+[*_, pickyFox] <- mamaHen
+
+assert(pickyFox == 7)
+
+```
+
+Under the hood, `unpack` just attaches `[countFromStart..^countFromEnd]` to whatever you throw at it, so anything that has slice operator implemented should work. Which also brings us to our first caveat.
+
+#### Caveat
+
+##### Doesn't Work on tuples
+
+Unless you implement the `..` operator (and its friends) yourself though.
+
+##### Can't be used at the first item with `var`
+
+Due to restriction from nim's grammar, while using `var` to unpack sequences, most prefix symbol aren't allowed to follow `var`. This will be solved with indexed unpacking (ComingSoon™) in the next release.
+
+```nim
+# These will work.
+[var c, *d] <- someSeq
+[var c, *d] <- someSeq
+
+# This won't work.
+# [var *a, b] <- someSeq
+```
+
+##### Only one rest operator per unpack
+
+`[*a, *b, c] <- someSeq` is not allowed. It might be possible, but I think it will be really messy (plus I am lazy). Same restriction applies to both Python and JavaScript, so I think it's okay to skip this part for now.
+
+##### Can't guard against incorrect index access at compile time
+
+Since we have no way to know the sequence length at compile time, (well, at least I don't know a way). We can't know if you are trying to do something goofy like:
+
+```nim
+[a, b, *c, d, e] <- @[1,2,3]
+```
+
 ## Notes
 
 ### About the syntax
@@ -136,7 +206,11 @@ It is quite weird to see `name = someName` and then `someName` is the symbol bei
 
 - Docs
 - Maybe we can also support tables?
-- Spread operator
+- More informative error message for out of bound sequence access during unpacking.
+
+## Maybe TODO
+
+- rest operator for objects/tables.
 
 ## Suggestions and PR's are welcome
 

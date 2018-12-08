@@ -1,13 +1,13 @@
 import unittest
 
 import unpack
-import macros
 
 suite "Sequence-like unpacking with unpackSeq/aUnpackSeq macro":
   setup:
     let testSeq = @[2, 4, 6]
     let testArray = [2, 4, 6]
     let testTuple = (2, 4, 6)
+    let testString = "246"
 
   test "should unpack sequence":
     testSeq.unpackSeq(a, b, c)
@@ -29,21 +29,30 @@ suite "Sequence-like unpacking with unpackSeq/aUnpackSeq macro":
   test "should unpack array":
     testArray.unpackSeq(a, b, c)
     check [a, c, b] == [2, 6, 4]
+
   test "should unpack tuple":
     testTuple.unpackSeq(a, b, c)
     check [a, c, b] == [2, 6, 4]
     ## testTuple.unpackObject(d, e, f, g) <- will cause IndexError at runtime
+
+  test "should unpack string":
+    testString.unpackSeq(a, b, c)
+    check [a, c, b] == ['2', '6', '4']
+
   test "should unpack from index 0 to arbitrary number":
     testTuple.unpackSeq(a, b)
     check [a, b] == [2, 4]
+
   test "unpackSeq with var before first item should create variables with var":
     testTuple.unpackSeq(var a, b)
     check [a, b] == [2, 4]
     a = 13
     check a == 13
+
   test "unpackSeq without var before first item defines symbols with let":
     testTuple.unpackSeq(a, b)
     check [a, b] == [2, 4]
+
   test "aUnpackSeq should assign data to existing variables":
     var a, b = 1
     testTuple.aUnpackSeq(a, _, b)
@@ -124,10 +133,10 @@ suite "Object meber unpacking unpackObject/aUnpackObject":
     tim.colleague(johnName).unpackObject(name, job)
 
     # is expanded into:
-    # let someUniqueSym1212498 = tim.colleague(johnName)
+    # let someUniqueSym1_212_498 = tim.colleague(johnName)
     # let
-    #   name = someUniqueSym1212498.name
-    #   job = someUniqueSym1212498.job
+    #   name = someUniqueSym1_212_498.name
+    #   job = someUniqueSym1_212_498.job
 
     check name == johnName
     check job == fluffer
@@ -202,10 +211,10 @@ suite "Object meber unpacking with arrow operators":
     {name, job} <- tim.colleague(johnName)
 
     # is expanded into:
-    # let someUniqueSym1212498 = tim.colleague(johnName)
+    # let someUniqueSym1_212_498 = tim.colleague(johnName)
     # let
-    #   name = someUniqueSym1212498.name
-    #   job = someUniqueSym1212498.job
+    #   name = someUniqueSym1_212_498.name
+    #   job = someUniqueSym1_212_498.job
 
     check name == johnName
     check job == fluffer

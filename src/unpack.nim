@@ -1,54 +1,25 @@
 import macros
+import deprecating/oldAPI
+export oldAPi
 
-proc unpackInternal(srcNode, dests: NimNode; sec,
-  statement: NimNodeKind): NimNode =
-  result = newStmtList()
-  var section = sec.newTree()
-  var stNode = statement.newTree(newEmptyNode(), newEmptyNode())
-  if statement != nnkAsgn:
-    stNode.add(newEmptyNode())
-  var src = srcNode
-  # Creates a temporary symbol to store proc result.
-  if src.kind != nnkSym:
-    src = genSym(nskLet, "src")
-    result.add(newLetStmt(src, srcNode))
-  let typ = srcNode.getType
-  case typ.typeKind:
-  of ntySequence, ntyArray, ntyOpenArray, ntyTuple:
-    var i = 1
-    for dest in dests.children:
-      if dest.strVal != "_":
-        var newNode = stNode.copyNimTree
-        newNode[0] = dest
-        newNode[^1] = nnkBracketExpr.newTree(src, newLit(i-1))
-        section.add(newNode)
-      inc i
-  of ntyObject, ntyRef, ntyPtr:
-    for dest in dests.children:
-      case dest.kind:
-      of nnkExprEqExpr:
-        var newNode = stNode.copyNimTree
-        newNode[0] = dest[0]
-        newNode[^1] = nnkDotExpr.newTree(src, dest[1])
-        section.add(newNode)
-      else:
-        var newNode = stNode.copyNimTree
-        newNode[0] = dest
-        newNode[^1] = nnkDotExpr.newTree(src, dest)
-        section.add(newNode)
-  else: error("Oh NOOoo! Type `" & $src.typeKind & "` can not be unpacked!",
-      src)
-  result.add(section)
+const
+  restOp = "*"
+  skipOp = "_"
 
-macro vunpack*(src: typed; dests: varargs[untyped]): typed {.
-  deprecated: "use unpackObject/unpackSeq instead".} =
-  unpackInternal(src, dests, nnkVarSection, nnkIdentDefs)
-macro lunpack*(src: typed; dests: varargs[untyped]): typed {.
-  deprecated: "use unpackObject/unpackSeq instead".} =
-  unpackInternal(src, dests, nnkLetSection, nnkIdentDefs)
-macro unpack*(src: typed; dests: varargs[untyped]): typed {.
-  deprecated: "use aUnpackObject/aunpackSeq instead".} =
-  unpackInternal(src, dests, nnkStmtList, nnkAsgn)
+proc getRealDest(dest: NimNode; restCount: var int): NimNode =
+  result = dest
+  case dest.kind:
+  of nnkVarTy:
+    result = dest[0]
+  of nnkPrefix:
+    if dest[0].strVal != restOp:
+      error("Only prefix allowed is `" & restOp & "` operator", dest)
+    else:
+      if restCount > 0:
+        error("Only one rest operator allowed per unpack")
+      restCount += 1
+    result = dest[1]
+  else: discard
 
 proc unpackSequenceInternal(srcNode, dests: NimNode; sec,
   statement: NimNodeKind): NimNode =
@@ -62,19 +33,50 @@ proc unpackSequenceInternal(srcNode, dests: NimNode; sec,
   if src.kind != nnkSym:
     src = genSym(nskLet, "src")
     result.add(newLetStmt(src, srcNode))
-  var i = 1
+  var
+    startInd = 0
+    endCount = 0
+    restCount = 0
+    restDest = newLit(0)
+  # First pass from the front
   for dest in dests.children:
+    let realDest = getRealDest(dest, restCount)
     var newNode = stNode.copyNimTree
-    var realDest = dest
-    case dest.kind:
-    of nnkVarTy:
-      realDest = dest[0]
-    else: discard
-    if realDest.strVal != "_":
-      newNode[0] = realDest
-      newNode[^1] = nnkBracketExpr.newTree(src, newLit(i-1))
+    if realDest.strVal != skipOp:
+      if restCount == 0:
+        newNode[0] = realDest
+        newNode[^1] = nnkBracketExpr.newTree(src, newLit(startInd))
+        section.add(newNode)
+    if restCount == 0: startInd += 1
+    else:
+      if restDest.kind == nnkIntLit:
+        restDest = realDest
+      else: endCount += 1
+  # Second pass from the back
+  if endCount > 0:
+    for endInd in 1..endCount:
+      let realDest = getRealDest(dests[^endInd], restCount)
+      var newNode = stNode.copyNimTree
+
+      if realDest.strVal != skipOp:
+        newNode[0] = realDest
+        newNode[^1] = nnkBracketExpr.newTree(src, nnkPrefix.newTree(
+          newIdentNode("^"),
+          newLit(endInd)
+        ))
+        section.add(newNode)
+  # Adds rest statement
+  if restCount == 1:
+    var newNode = stNode.copyNimTree
+    if restDest.strVal != skipOp:
+      newNode[0] = restDest
+      newNode[^1] = nnkBracketExpr.newTree(src, nnkInfix.newTree(
+        newIdentNode("..^"),
+        newLit(startInd),
+        newLit(endCount+1)
+      ))
       section.add(newNode)
-    inc i
+
 
   result.add(section)
 

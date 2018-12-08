@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.0
+
+- Adds `*` rest operator support for unpacking sequence-like stuff.
+
 ## v0.2.0
 
 - Deprecating `unpack`, `lunpack`, and `vunpack` in favor of `unpackObject`, `unpackSeq`, `aUnpackObjec`, and `aUnpackSeq`. The new interface is more similar to the `<-` syntax, and the programmers will have more control over how the data source will be unpacked.
