@@ -1,6 +1,6 @@
 import macros
-import deprecating/oldAPI
-export oldAPi
+import unpack/deprecating
+export deprecating
 
 const
   restOp = "*"
