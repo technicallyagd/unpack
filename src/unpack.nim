@@ -14,7 +14,9 @@ proc getRealDest(dest: NimNode; restCount: var int): NimNode =
     result = dest[0]
   of nnkPrefix:
     if dest[0].strVal != restOp:
-      error("Only prefix allowed is `" & restOp & "` operator", dest)
+      error("Beep boop. I don't understand prefix `" & dest[
+          0].strVal & "`. Only prefix I know is `" & restOp & "` operator",
+              dest)
     else:
       if restCount > 0:
         error("Only one rest operator allowed per unpack")
