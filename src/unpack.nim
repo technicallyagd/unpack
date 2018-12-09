@@ -9,11 +9,18 @@ const
 
 proc getRealDest(dest: NimNode; restCount: var int): NimNode =
   result = dest
-  case dest.kind:
+
+  if dest.kind == nnkInfix:
+    if dest[0].strVal == renameOp:
+      result = dest[2]
+    else:
+      error("Only `" & renameOp & "` is allowed as the infix", dest[0])
+
+  case result.kind:
   of nnkVarTy:
     result = dest[0]
   of nnkPrefix:
-    if dest[0].strVal != restOp:
+    if result[0].strVal != restOp:
       error("Beep boop. I don't understand prefix `" & dest[
           0].strVal & "`. Only prefix I know is `" & restOp & "` operator",
               dest)
@@ -21,7 +28,7 @@ proc getRealDest(dest: NimNode; restCount: var int): NimNode =
       if restCount > 0:
         error("Only one rest operator allowed per unpack")
       restCount += 1
-    result = dest[1]
+    result = result[1]
   else: discard
 
 proc unpackSequenceInternal(srcNode, dests: NimNode; sec,

@@ -131,7 +131,9 @@ Like in Python (`*a,b = range(5)`) and modern JavaScript `let [a,...b] = someArr
 
 ```nim
 
-let mamaHen = @[3,4,5,6,7]
+import unpack
+
+let mamaHen = @[3, 4, 5, 6, 7]
 
 [a, b, *sneakyFox] <- mamaHen
 
@@ -156,6 +158,26 @@ assert(sloppySavior == @[5, 6])
 
 assert(pickyFox == 7)
 
+# It's okay to take the middle chunk too.
+[f, g, *randomFox, _, h] <- mamaHen
+
+assert([f, g, h] == [3, 4, 7])
+assert(randomFox == @[5])
+
+# Due to restriction from nim's grammar, `*` following `var`
+# is not allowed. Adding `_ as` before it is the current hack I chose to bypass this.
+[var _ as *boldFox, i, j] <- mamaHen
+
+assert([i, j] == [6, 7])
+assert(boldFox == @[3, 4, 5])
+
+# They are indeed created with var.
+i = 12
+boldFox[2] = 123
+
+assert(i == 12)
+assert(boldFox == @[3, 123, 5])
+
 ```
 
 Under the hood, `unpack` just attaches `[countFromStart..^countFromEnd]` to whatever you throw at it, so anything that has slice operator implemented should work. Which also brings us to our first caveat.
@@ -165,19 +187,6 @@ Under the hood, `unpack` just attaches `[countFromStart..^countFromEnd]` to what
 ##### Doesn't Work on tuples
 
 Unless you implement the `..` operator (and its friends) yourself though.
-
-##### Can't be used at the first item with `var`
-
-Due to restriction from nim's grammar, while using `var` to unpack sequences, most prefix symbol aren't allowed to follow `var`. This will be solved with indexed unpacking (ComingSoon™) in the next release.
-
-```nim
-# These will work.
-[var c, *d] <- someSeq
-[var c, *d] <- someSeq
-
-# This won't work.
-# [var *a, b] <- someSeq
-```
 
 ##### Only one rest operator per unpack
 

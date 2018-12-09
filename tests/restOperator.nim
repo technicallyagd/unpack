@@ -25,8 +25,23 @@ assert(sloppySavior == @[5, 6])
 
 assert(pickyFox == 7)
 
+# It's okay to take the middle chunk too.
 [f, g, *randomFox, _, h] <- mamaHen
 
 assert([f, g, h] == [3, 4, 7])
-
 assert(randomFox == @[5])
+
+# Due to restriction from nim's grammar, `*` following `var`
+# is not allowed. Adding `_ as` before it is the current hack I chose to bypass this.
+[var _ as *boldFox, i, j] <- mamaHen
+
+assert([i, j] == [6, 7])
+assert(boldFox == @[3, 4, 5])
+
+# They are indeed created with var.
+i = 12
+boldFox[2] = 123
+
+assert(i == 12)
+assert(boldFox == @[3, 123, 5])
+
