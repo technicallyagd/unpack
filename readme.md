@@ -90,10 +90,10 @@ tim.someProcWithSideEffects(arg).unpackObject(name as tim0, job as job0)
 # {name as tim0, job as job0} <- tim.someProcWithSideEffects(arg)
 
 # is expanded into:
-# let someUniqueSym1212498 = tim.someProcWithSideEffects(arg)
+# let someUniqueSym1_212_498 = tim.someProcWithSideEffects(arg)
 # let
-#   tim0 = someUniqueSym1212498.name
-#   job0 = someUniqueSym1212498.job
+#   tim0 = someUniqueSym1_212_498.name
+#   job0 = someUniqueSym1_212_498.job
 
 # if you haven't noticed,
 # this means we can unpack named tuples like objects
@@ -116,7 +116,14 @@ let (_, diz, _, iz, _, _, _, it) = someTuple
 # with vanilla nim
 let (youNeedTo, writeSoMany, underscoresMan, _, _, _, _, _) = someTuple
 
+# also supports nested unpacking
+let nestedTuple = ((123, 321), (-3, (1, 2, 3, 4)))
+
+# This nesting is unnecessarily deep, but it's supported.
+[ [run, outOf], [names, [_, _, toUse, now]]] <- nestedTuple
+
 # to be continued...
+
 ```
 
 See [tests/theTest.nim](tests/theTest.nim) for more usages.
@@ -188,9 +195,25 @@ Under the hood, `unpack` just attaches `[countFromStart..^countFromEnd]` to what
 
 Unless you implement the `..` operator (and its friends) yourself though.
 
-##### Only one rest operator per unpack
+##### Only one rest operator per unpacked sequence
 
 `[*a, *b, c] <- someSeq` is not allowed. It might be possible, but I think it will be really messy (plus I am lazy). Same restriction applies to both Python and JavaScript, so I think it's okay to skip this part for now.
+
+However, using rest operator in different parts of the nested sequence is fine, since they have different index counters, so this will work:
+
+```nim
+[[*a, b], [c, d, *e], *f, g, h] <- someNestedSeq
+# is expanded into:
+# let
+#   b = someNestedSeq[0][^1]
+#   a = someNestedSeq[0][0..^2]
+#   c = someNestedSeq[1][0]
+#   d = someNestedSeq[1][1]
+#   e = someNestedSeq[1][2..^1]
+#   h = someNestedSeq[^1]
+#   g = someNestedSeq[^2]
+#   f = someNestedSeq[2..^3]
+```
 
 ##### Can't guard against incorrect index access at compile time
 

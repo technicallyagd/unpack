@@ -43,5 +43,14 @@ i = 12
 boldFox[2] = 123
 
 assert(i == 12)
-assert(boldFox == @[3, 123, 5])
+assert(boldFox == @[3, 4, 123])
 
+# Works with nested unpack as well.
+
+let tisMad = @[@[@[1, 2, 3], @[4, 5]], @[@[6], @[7, 8, 9, 10]]]
+
+[var [[z, *y], [_, x]], [[w], [_, *v, u]]] <- tisMad
+
+assert([z, x, w, u] == [1, 5, 6, 10])
+assert(y == @[2, 3])
+assert(v == @[8, 9])

@@ -31,78 +31,11 @@ proc getRealDest(dest: NimNode; restCount: var int): NimNode =
     result = result[1]
   else: discard
 
-proc unpackSequenceInternal(srcNode, dests: NimNode; sec,
-  statement: NimNodeKind): NimNode =
-  result = newStmtList()
-  var section = sec.newTree()
-  var stNode = statement.newTree(newEmptyNode(), newEmptyNode())
-  if statement != nnkAsgn:
-    stNode.add(newEmptyNode())
-  var src = srcNode
-  # Creates a temporary symbol to store proc result.
-  if src.kind != nnkSym:
-    src = genSym(nskLet, "src")
-    result.add(newLetStmt(src, srcNode))
-  var
-    startInd = 0
-    endCount = 0
-    restCount = 0
-    restDest = newLit(0)
-  # First pass from the front
-  for dest in dests.children:
-    let realDest = getRealDest(dest, restCount)
-    var newNode = stNode.copyNimTree
-    if realDest.strVal != skipOp:
-      if restCount == 0:
-        newNode[0] = realDest
-        newNode[^1] = nnkBracketExpr.newTree(src, newLit(startInd))
-        section.add(newNode)
-    if restCount == 0: startInd += 1
-    else:
-      if restDest.kind == nnkIntLit:
-        restDest = realDest
-      else: endCount += 1
-  # Second pass from the back
-  if endCount > 0:
-    for endInd in 1..endCount:
-      let realDest = getRealDest(dests[^endInd], restCount)
-      var newNode = stNode.copyNimTree
-
-      if realDest.strVal != skipOp:
-        newNode[0] = realDest
-        newNode[^1] = nnkBracketExpr.newTree(src, nnkPrefix.newTree(
-          newIdentNode("^"),
-          newLit(endInd)
-        ))
-        section.add(newNode)
-  # Adds rest statement
-  if restCount == 1:
-    var newNode = stNode.copyNimTree
-    if restDest.strVal != skipOp:
-      newNode[0] = restDest
-      newNode[^1] = nnkBracketExpr.newTree(src, nnkInfix.newTree(
-        newIdentNode("..^"),
-        newLit(startInd),
-        newLit(endCount+1)
-      ))
-      section.add(newNode)
+proc processSeqUnpack(section, src, dests, stNode: NimNode): NimNode
 
 
-  result.add(section)
-
-proc unpackObjectInternal(srcNode, dests: NimNode; sec,
-  statement: NimNodeKind): NimNode =
-  result = newStmtList()
-  var section = sec.newTree()
-  var stNode = statement.newTree(newEmptyNode(), newEmptyNode())
-  if statement != nnkAsgn:
-    stNode.add(newEmptyNode())
-  var src = srcNode
-  # Creates a temporary symbol to store proc result.
-  if src.kind != nnkSym:
-    ## echo src.treeRepr
-    src = genSym(nskLet, "src")
-    result.add(newLetStmt(src, srcNode))
+proc processObjectUnpack(section, src, dests, stNode: NimNode): NimNode =
+  result = section
   for dest in dests.children:
     case dest.kind:
     of nnkInfix:
@@ -113,11 +46,20 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
           realDest = realDest[0]
         else: discard
         var newNode = stNode.copyNimTree
-        newNode[0] = dest[2]
-        newNode[^1] = nnkDotExpr.newTree(src, realDest)
-        section.add(newNode)
+        var newSource = nnkDotExpr.newTree(src, realDest)
+        let newDest = dest[2]
+        case newDest.kind:
+        of nnkCurly:
+          result = processObjectUnpack(result, newSource, newDest, stNode)
+        of nnkBracket:
+          result = processSeqUnpack(result, newSource, newDest, stNode)
+        else:
+          newNode[0] = newDest
+          newNode[^1] = newSource
+          result.add(newNode)
       else:
-        error("Only `" & renameOp & "` is allowed as the infix", dest[0])
+        error("Only `" & renameOp & "` is allowed as the infix",
+            dest[0])
     of nnkExprColonExpr, nnkExprEqExpr:
       var realDest = dest[0]
       case realDest.kind:
@@ -130,8 +72,7 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
       warning("This syntax is being deprecated, please use `{" &
           realDest.strVal & " as " & dest[
           1].strVal & "}` instead", dest)
-
-      section.add(newNode)
+      result.add(newNode)
     else:
       var realDest = dest
       case dest.kind:
@@ -141,8 +82,98 @@ proc unpackObjectInternal(srcNode, dests: NimNode; sec,
       var newNode = stNode.copyNimTree
       newNode[0] = realDest
       newNode[^1] = nnkDotExpr.newTree(src, realDest)
-      section.add(newNode)
+      result.add(newNode)
 
+proc processSeqUnpack(section, src, dests, stNode: NimNode): NimNode =
+  var
+    startInd = 0
+    endCount = 0
+    restCount = 0
+    restDest = newLit(0)
+  result = section
+  # First pass from the front
+  for dest in dests.children:
+    let realDest = getRealDest(dest, restCount)
+    var newNode = stNode.copyNimTree
+    let newSource = nnkBracketExpr.newTree(src, newLit(startInd))
+    let newDest = realDest
+    case realDest.kind:
+    of nnkCurly:
+      result = processObjectUnpack(result, newSource, newDest, stNode)
+    of nnkBracket:
+      result = processSeqUnpack(result, newSource, newDest, stNode)
+    else:
+      if realDest.strVal != skipOp:
+        if restCount == 0:
+
+          newNode[0] = realDest
+          newNode[^1] = newSource
+          result.add(newNode)
+    if restCount == 0: startInd += 1
+    else:
+      if restDest.kind == nnkIntLit:
+        restDest = realDest
+      else: endCount += 1
+  # Second pass from the back
+  if endCount > 0:
+    for endInd in 1..endCount:
+      let realDest = getRealDest(dests[^endInd], restCount)
+      var newNode = stNode.copyNimTree
+      let newSource = nnkBracketExpr.newTree(src, nnkPrefix.newTree(
+          newIdentNode("^"),
+          newLit(endInd)
+        ))
+      let newDest = realDest
+      case realDest.kind:
+      of nnkCurly:
+        result = processObjectUnpack(result, newSource, newDest, stNode)
+      of nnkBracket:
+        result = processSeqUnpack(result, newSource, newDest, stNode)
+      else:
+        if realDest.strVal != skipOp:
+          newNode[0] = realDest
+          newNode[^1] = newSource
+          result.add(newNode)
+  # Adds rest statement
+  if restCount == 1:
+    var newNode = stNode.copyNimTree
+    if restDest.strVal != skipOp:
+      newNode[0] = restDest
+      newNode[^1] = nnkBracketExpr.newTree(src, nnkInfix.newTree(
+        newIdentNode("..^"),
+        newLit(startInd),
+        newLit(endCount+1)
+      ))
+      result.add(newNode)
+
+proc prepareHead(srcNode: NimNode; sec,
+  statement: NimNodeKind): (NimNode, NimNode, NimNode, NimNode) =
+  var tobeResult = newStmtList()
+  var section = sec.newTree()
+  var stNode = statement.newTree(newEmptyNode(), newEmptyNode())
+  if statement != nnkAsgn:
+    stNode.add(newEmptyNode())
+  var src = srcNode
+  # Creates a temporary symbol to store proc result.
+  if src.kind != nnkSym:
+    src = genSym(nskLet, "src")
+    tobeResult.add(newLetStmt(src, srcNode))
+  (tobeResult, section, src, stNode)
+
+proc unpackSequenceInternal(srcNode, dests: NimNode; sec,
+  statement: NimNodeKind): NimNode =
+  var (tobeResult, section, src, stNode) = prepareHead(srcNode, sec,
+      statement)
+  result = tobeResult
+  section = processSeqUnpack(section, src, dests, stNode)
+  result.add(section)
+
+proc unpackObjectInternal(srcNode, dests: NimNode; sec,
+  statement: NimNodeKind): NimNode =
+  var (tobeResult, section, src, stNode) = prepareHead(srcNode, sec,
+    statement)
+  result = tobeResult
+  section = processObjectUnpack(section, src, dests, stNode)
   result.add(section)
 
 macro `<-`*(dests: untyped; src: typed): typed =
@@ -243,3 +274,4 @@ macro aUnpackSeq*(src: typed; dests: varargs[untyped]): typed =
   ## var a, b, c: int
   ## src.aUnpackSeq(a, b, c)
   result = unpackSequenceInternal(src, dests, nnkStmtList, nnkAsgn)
+

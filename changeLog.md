@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.4.0
+
+- Supports nested unpacking.
+
+## v0.3.2
+
+- Implements hack to enable rest unpacking after `var`. i.e. `[var _ as *a, b] <- someSeq`
+
 ## v0.3.1
 
 - Renames rename syntax. From the originally confusing `{name: anotherName} <- tim` and `unpackObject(name = anotherName)` to clear and descriptive `as` for both. (i.e. `{name as anotherName} <- tim` and `unpackObject(name as anotherName)`.)
@@ -10,7 +18,7 @@
 
 ## v0.2.0
 
-- Deprecating `unpack`, `lunpack`, and `vunpack` in favor of `unpackObject`, `unpackSeq`, `aUnpackObjec`, and `aUnpackSeq`. The new interface is more similar to the `<-` syntax, and the programmers will have more control over how the data source will be unpacked.
+- Deprecating `unpack`, `lunpack`, and `vunpack` in favor of `unpackObject`, `unpackSeq`, `aUnpackObject`, and `aUnpackSeq`. The new interface is more similar to the `<-` syntax, and the programmers will have more control over how the data source will be unpacked.
 
 - Adds example and tests to demonstrate how to flexibly unpack named tuples (like a boss).
 
