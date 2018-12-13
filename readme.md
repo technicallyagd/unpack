@@ -6,6 +6,10 @@ Array/Sequence/Object destructuring/unpacking macros attempt to quench the thirs
 
 The syntax and functionality of each macro are still evolving daily/hourly. Please check out [changeLog.md](changeLog.md) to see the recent changes. I will keep deprecated syntax for a few release while triggering compiler warnings to nudge people to new syntax, but they will be removed eventually.
 
+### Potentially Breaking Change
+
+- Since the old API has actually caused conflicts with other packages, `unpack`, `vunpack`, and `lunpack` are not exported as part of the main package anymore. If you still wants to use them for some reason, please `import unpack/deprecating` instead.
+
 ## Installation
 
 ```cli

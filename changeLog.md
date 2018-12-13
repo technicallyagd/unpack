@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.5.0
+
+- Hides deprecated api, `unpack`, `vunpack`, and `lunpack`, in `unpack/deprecating`. If you still wants to use them for some reason, please `import unpack/deprecating` instead.
+
 ## v0.4.0
 
 - Supports nested unpacking.

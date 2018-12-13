@@ -1,6 +1,4 @@
 import macros
-import unpack/deprecating
-export deprecating
 
 const
   restOp = "*"

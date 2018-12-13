@@ -1,6 +1,6 @@
 import unittest
 
-import unpack
+import unpack/deprecating
 import macros
 
 suite "Sequence unpacking with (l|v)?unpack macro":
@@ -88,10 +88,10 @@ suite "Object meber unpacking with (l|v)?unpack macro":
     tim.colleague(johnName).lunpack(name, job)
 
     # is expanded into:
-    # let someUniqueSym1212498 = tim.colleague(johnName)
+    # let someUniqueSym1_212_498 = tim.colleague(johnName)
     # let
-    #   name = someUniqueSym1212498.name
-    #   job = someUniqueSym1212498.job
+    #   name = someUniqueSym1_212_498.name
+    #   job = someUniqueSym1_212_498.job
 
     check name == johnName
     check job == fluffer
