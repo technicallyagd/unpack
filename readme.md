@@ -8,7 +8,7 @@ The syntax and functionality of each macro are still evolving daily/hourly. Plea
 
 ### Potentially Breaking Change
 
-- Since the old API has actually caused conflicts with other packages, `unpack`, `vunpack`, and `lunpack` are not exported as part of the main package anymore. If you still wants to use them for some reason, please `import unpack/deprecating` instead.
+- Since the old API has actually caused conflicts with other packages, `unpack`, `vunpack`, and `lunpack` are not exported as part of the main package anymore. If you still want to use them for some reason, please `import unpack/deprecating` instead.
 
 ## Installation
 
