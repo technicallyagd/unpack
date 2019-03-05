@@ -275,3 +275,30 @@ suite "Named tuple unpacking with arrow operators":
     check (l, n, g) == (2, bojack, felis)
     {genus as g} <-- horse
     check (l, n, g) == (2, bojack, equus)
+
+
+suite "Unpacking entire objects (all fields)":
+  
+  type Foo = object
+    a: float
+    b: string
+
+  test "simple objects":
+    let foo = Foo(a: 2.0, b: "abc")
+    unpack foo
+    check declared(a); check declared(b)
+    check a == 2.0; check b == "abc"
+  
+  test "ref objects":
+    var foo = new Foo
+    foo[] = Foo(a: 2.0, b: "abc")
+    unpack foo
+    check declared(a); check declared(b)
+    check a == 2.0; check b == "abc"
+  
+  test "pointer objects":
+    var foo = create Foo
+    foo[] = Foo(a: 2.0, b: "abc")
+    unpack foo
+    check declared(a); check declared(b)
+    check a == 2.0; check b == "abc"
