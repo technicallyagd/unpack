@@ -273,12 +273,17 @@ macro aUnpackSeq*(src: typed; dests: varargs[untyped]): typed =
   ## src.aUnpackSeq(a, b, c)
   result = unpackSequenceInternal(src, dests, nnkStmtList, nnkAsgn)
 
-macro unpack*(obj: object | ref object | ptr object): untyped =
+macro unpackInternal(obj: object | ref object | ptr object, variable: static bool): untyped =
 
-  let fieldsAsSymbols =
+  var fields =
     if obj.getType.kind == nnkBracketExpr:
-      toSeq children obj.getType[1].getType.getType[2]
+      (toSeq children obj.getType[1].getType.getType[2]).map n => ident $n
     else:
-      toSeq children obj.getType[2]
+      (toSeq children obj.getType[2]).map n => ident $n
 
-  getAst unpackObject(obj, fieldsAsSymbols.map s => ident $s)
+  if variable: fields[0] = newTree(nnkVarTy, fields[0])
+
+  getAst unpackObject(obj, if variable: fields else: fields)
+
+macro unpack*(obj: object | ref object | ptr object): untyped = getAst unpackInternal(obj, false)
+macro unpackVar*(obj: object | ref object | ptr object): untyped = getAst unpackInternal(obj, true)
