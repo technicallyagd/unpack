@@ -286,19 +286,22 @@ suite "Unpacking entire objects (all fields)":
   test "simple objects":
     let foo = Foo(a: 2.0, b: "abc")
     unpack foo
-    check declared(a); check declared(b)
     check a == 2.0; check b == "abc"
+  
+  test "simple var objects":
+    var foo = Foo(a: 2.0, b: "abc")
+    unpackVar foo
+    check a == 2.0; check b == "abc"
+    a = 1.0; b = "xyz"
   
   test "ref objects":
     var foo = new Foo
     foo[] = Foo(a: 2.0, b: "abc")
     unpack foo
-    check declared(a); check declared(b)
     check a == 2.0; check b == "abc"
   
   test "pointer objects":
     var foo = create Foo
     foo[] = Foo(a: 2.0, b: "abc")
     unpack foo
-    check declared(a); check declared(b)
     check a == 2.0; check b == "abc"
