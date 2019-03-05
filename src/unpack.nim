@@ -1,4 +1,4 @@
-import macros
+import macros, sequtils, sugar
 
 const
   restOp = "*"
